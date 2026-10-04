@@ -1,0 +1,349 @@
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>تبدیل دستور ترموکس به iSH</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap">
+<style>
+:root{--bg:#eef1f4;--ink:#1b2430;--mute:#5a6675;--card:#fff;--line:#d3dae2;--acc:#0e7c86;--accfg:#fff;--term:#14202b;--termfg:#cfe8e0;--warn:#9a5b00;--code:#e4eaf0;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f161d;--ink:#e6edf3;--mute:#93a1b0;--card:#18222c;--line:#2a3846;--acc:#4cc2cc;--accfg:#06262a;--term:#0a1117;--warn:#f0b35a;--code:#223140}}
+:root[data-theme="dark"]{--bg:#0f161d;--ink:#e6edf3;--mute:#93a1b0;--card:#18222c;--line:#2a3846;--acc:#4cc2cc;--accfg:#06262a;--term:#0a1117;--warn:#f0b35a;--code:#223140}
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.8 Vazirmatn,Tahoma,system-ui,sans-serif}
+main{max-width:680px;margin:0 auto;padding:20px 16px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.top button{padding:6px 14px;flex:none}
+h1{font-size:1.4rem;margin:0 0 4px}
+h2{font-size:1rem;margin:18px 0 4px}
+p.sub{margin:0 0 20px;color:var(--mute);font-size:.92rem}
+label.t{display:block;font-weight:700;margin:16px 0 6px}
+textarea,pre{width:100%;margin:0;border-radius:10px;font:14px/1.6 ui-monospace,Menlo,Consolas,monospace;direction:ltr;text-align:left;white-space:pre-wrap;word-break:break-all}
+textarea{min-height:120px;padding:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);resize:vertical}
+textarea:focus-visible,button:focus-visible,summary:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+pre{min-height:120px;padding:12px;background:var(--term);color:var(--termfg);overflow-x:auto}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+button{font:700 .95rem Vazirmatn,Tahoma,sans-serif;padding:10px 18px;border-radius:10px;border:1px solid var(--acc);cursor:pointer;background:var(--acc);color:var(--accfg)}
+button.ghost{background:transparent;color:var(--acc)}
+.opts{margin-top:12px;display:grid;gap:2px}
+.chk{display:flex;gap:8px;align-items:flex-start;font-size:.92rem}
+.chk input{margin-top:7px}
+.notes{margin:8px 0 0;padding:0;list-style:none;font-size:.9rem;color:var(--mute)}
+.notes li{margin:4px 0}.notes li.w{color:var(--warn)}
+code{direction:ltr;unicode-bidi:isolate;font:.85em ui-monospace,Menlo,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:5px;word-break:break-all}
+details{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:4px 14px}
+summary{cursor:pointer;font-weight:700;padding:8px 0}
+details ul{margin:4px 0 10px;padding:0 20px;font-size:.9rem;color:var(--mute)}
+details li{margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1 data-i="title"></h1><button id="lang" class="ghost" data-i="lang" aria-label="Language / زبان"></button></div>
+<p class="sub" data-i="sub"></p>
+
+<label class="t" for="in" data-i="lin"></label>
+<textarea id="in" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="pkg install -y python git&#10;bash <(curl -fsSL https://example.com/install.sh)"></textarea>
+
+<div class="opts">
+<div class="chk"><input type="checkbox" id="pre"><label for="pre" data-i="pre"></label></div>
+<div class="chk"><input type="checkbox" id="brk"><label for="brk" data-i="brk"></label></div>
+</div>
+
+<label class="t" for="out" data-i="lout"></label>
+<pre id="out" aria-live="polite"></pre>
+<ul id="warns" class="notes"></ul>
+<ul id="notes" class="notes"></ul>
+
+<div class="row">
+<button id="copy"></button>
+<button id="ex" class="ghost" data-i="ex"></button>
+<button id="clr" class="ghost" data-i="clr"></button>
+</div>
+
+<details>
+<summary data-i="sum"></summary>
+<ul>
+<li data-i="d1"></li><li data-i="d2"></li><li data-i="d3"></li><li data-i="d4"></li><li data-i="d5"></li>
+</ul>
+</details>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+const MSG={"fa": {"k0": "دستور بسته بدون زیردستور بود و تغییر نکرد: `{0}`", "k1": "دستور بسته (`pkg`/`apt`) با `apk` (مدیر بسته iSH) جایگزین شد؛ گزینه‌های `-y` و مشابه حذف شدند.", "k2": "مخزن‌های apk در iSH روی یک نسخه ثابت (Alpine v3.19) قفل شده‌اند؛ `apk upgrade` معمولاً چیز زیادی به‌روز نمی‌کند.", "k3": "`apk` خودش وابستگی‌های بلااستفاده را هنگام `apk del` پاک می‌کند؛ این دستور حذف شد.", "k4": "فایل `/etc/apk/repositories` را خود iSH مدیریت می‌کند و هنگام اجرا بازنویسی می‌شود؛ تغییر مخزن در اینجا پایدار نیست.", "k5": "بسته «{0}» مخصوص ترموکس است و در iSH معنی ندارد؛ حذف شد.", "k6": "زیردستور «{0}» معادل مشخصی در apk ندارد و تغییر نکرد: `{1}`", "k7": "`termux-setup-storage` با mount پوشه‌های آیفون جایگزین شد؛ یک پنجره انتخاب پوشه باز می‌شود و فایل‌ها در `/mnt/files` دیده می‌شوند.", "k8": "کلیپ‌بورد iSH از طریق `/dev/clipboard` خوانده می‌شود.", "k9": "کلیپ‌بورد iSH از طریق نوشتن در `/dev/clipboard` تنظیم می‌شود.", "k10": "`/dev/location` فقط مختصات را به شکل `+عرض,+طول` می‌دهد (نه JSON) و بار اول مجوز موقعیت از iOS می‌خواهد.", "k11": "معادل wake-lock در iSH خواندن پس‌زمینه‌ی `/dev/location` است تا برنامه در پس‌زمینه بیدار بماند؛ نیاز به مجوز موقعیت دارد و باتری بیشتری مصرف می‌کند.", "k12": "`termux-fix-shebang` در iSH لازم نیست؛ مسیر استاندارد مثل `#!/bin/sh` یا `#!/usr/bin/env bash` کار می‌کند.", "k13": "`termux-reload-settings` در iSH معنی ندارد و حذف شد.", "k14": "فایل `/etc/apk/repositories` را خود iSH مدیریت می‌کند و هنگام اجرا بازنویسی می‌شود.", "k15": "`termux-chroot` در iSH لازم نیست؛ iSH خودش یک محیط Alpine جداشده است.", "k16": "دستور `termux-{0}` (API اندروید) در iSH وجود ندارد و تغییر نکرد.", "k17": "آدرس در این دستور پیدا نشد و تغییر نکرد: `{0}`", "k18": "`{0} <(curl …)` (جایگزینی فرایند) در ash کار نمی‌کند؛ به دانلود فایل `{1}` و اجرای آن تبدیل شد.", "k19": "برای اجرای با `zsh` باید آن را نصب کنید: `apk add zsh`", "k20": "`sudo` حذف شد؛ در iSH کاربر پیش‌فرض root است.", "k21": "کلیپ‌بورد iSH از طریق نوشتن در `/dev/clipboard` تنظیم می‌شود.", "k22": "آلپاین ۳٫۱۹ نصب سراسری با pip را مجاز نمی‌داند (خطای externally-managed-environment)؛ از `--break-system-packages` یا venv استفاده کنید، یا بسته را با `apk add py3-…` نصب کنید.", "k23": "این دستور مخصوص اندروید/ترموکس است و در iSH وجود ندارد: `{0}`", "k24": "مسیرها و متغیرهای ترموکس (`$PREFIX`، `$TMPDIR` و `/data/data/com.termux/…`) به مسیرهای iSH (`/usr`، `/tmp`، `/root`) تبدیل شدند.", "k25": "مسیرهای حافظه اندروید به `/mnt/files` تبدیل شدند؛ ابتدا باید `mount -t ios . /mnt/files` را اجرا کنید و پوشه را انتخاب کنید.", "k26": "iSH یک پردازنده x86 ۳۲بیتی (خروجی `uname -m` برابر `i686`) شبیه‌سازی می‌کند؛ باینری‌های arm64/amd64 اجرا نمی‌شوند و باید نسخه `386`/`i386`/`i686` را دانلود کنید.", "k27": "نام این بسته‌ها در جدول تطبیق نبود و همان نام حفظ شد؛ با `apk search` درستی نامشان را بررسی کنید: {0}", "k28": "این دستور به `curl`/`bash` نیاز دارد که در iSH تازه‌نصب نیستند؛ گزینه «پیش‌نیازها» را بزنید یا اجرا کنید: `apk add curl bash`"}, "en": {"k0": "The package command had no subcommand and was left unchanged: `{0}`", "k1": "The package command (`pkg`/`apt`) was replaced with `apk` (iSH's package manager); flags like `-y` were dropped.", "k2": "iSH pins its apk repositories to a frozen snapshot (Alpine v3.19), so `apk upgrade` usually finds little to update.", "k3": "`apk` removes orphaned dependencies itself on `apk del`; this command was dropped.", "k4": "iSH manages `/etc/apk/repositories` itself and rewrites it on launch, so changing the repository here will not persist.", "k5": "Package \"{0}\" is Termux-specific and meaningless in iSH; it was removed.", "k6": "Subcommand \"{0}\" has no clear apk equivalent and was left unchanged: `{1}`", "k7": "`termux-setup-storage` was replaced by mounting an iPhone folder; a folder picker opens and the files appear in `/mnt/files`.", "k8": "The iSH clipboard is read through `/dev/clipboard`.", "k9": "The iSH clipboard is set by writing to `/dev/clipboard`.", "k10": "`/dev/location` returns only coordinates as `+lat,+lon` (not JSON) and asks iOS for location permission on first use.", "k11": "iSH's wake-lock equivalent is reading `/dev/location` in the background to keep the app alive; it needs location permission and uses more battery.", "k12": "`termux-fix-shebang` is not needed in iSH; standard paths like `#!/bin/sh` or `#!/usr/bin/env bash` work.", "k13": "`termux-reload-settings` is meaningless in iSH and was removed.", "k14": "iSH manages `/etc/apk/repositories` itself and rewrites it on launch.", "k15": "`termux-chroot` is not needed in iSH; iSH is already an isolated Alpine environment.", "k16": "The command `termux-{0}` (Android API) does not exist in iSH and was left unchanged.", "k17": "No URL was found in this command; left unchanged: `{0}`", "k18": "`{0} <(curl …)` (process substitution) does not work in ash; it was converted to downloading `{1}` and running it.", "k19": "To run with `zsh` you must install it first: `apk add zsh`", "k20": "`sudo` was removed; the default user in iSH is root.", "k21": "The iSH clipboard is set by writing to `/dev/clipboard`.", "k22": "Alpine 3.19 blocks system-wide pip installs (externally-managed-environment error); use `--break-system-packages` or a venv, or install the package with `apk add py3-…`.", "k23": "This command is Android/Termux-specific and does not exist in iSH: `{0}`", "k24": "Termux paths and variables (`$PREFIX`, `$TMPDIR`, `/data/data/com.termux/…`) were converted to iSH paths (`/usr`, `/tmp`, `/root`).", "k25": "Android storage paths were converted to `/mnt/files`; first run `mount -t ios . /mnt/files` and pick a folder.", "k26": "iSH emulates a 32-bit x86 CPU (`uname -m` prints `i686`); arm64/amd64 binaries will not run, so download the `386`/`i386`/`i686` build.", "k27": "These package names were not in the mapping table and kept as-is; verify them with `apk search`: {0}", "k28": "This command needs `curl`/`bash`, which a fresh iSH lacks; tick the prerequisites option or run: `apk add curl bash`"}};
+const UI={"fa": {"title": "تبدیل دستور ترموکس به iSH", "sub": "دستور مخصوص ترموکس را بچسبانید تا نسخه سازگار با iSH آیفون (Alpine Linux با <code>apk</code>) ساخته شود.", "lin": "دستور ترموکس", "lout": "دستور iSH", "pre": "اضافه کردن نصب پیش‌نیازها در ابتدا (curl، bash و ابزارهای مورد نیاز دستور) — برای iSH تازه‌نصب", "brk": "افزودن <code>--break-system-packages</code> به <code>pip install</code> (آلپاین نصب سراسری pip را به‌صورت پیش‌فرض می‌بندد)", "copy": "کپی دستور", "copied": "کپی شد", "ex": "نمونه", "clr": "پاک کردن", "lang": "English", "sum": "تفاوت‌های مهم iSH با ترموکس", "d1": "iSH یک پردازنده <b>x86 ۳۲بیتی</b> را شبیه‌سازی می‌کند؛ فایل‌های باینری <code>arm64</code> و <code>amd64</code> اجرا نمی‌شوند و نسخه <code>386</code>/<code>i386</code>/<code>i686</code> لازم است.", "d2": "سیستم‌عامل داخل iSH، Alpine Linux است: مدیر بسته <code>apk</code> (نه <code>pkg</code> و <code>apt</code>)، پوسته پیش‌فرض <code>ash</code> (نه bash) و کاربر پیش‌فرض root (بدون نیاز به <code>sudo</code>).", "d3": "مسیرهای ترموکس (<code>/data/data/com.termux/…</code>) وجود ندارند: <code>$PREFIX</code> برابر <code>/usr</code> و <code>$HOME</code> برابر <code>/root</code> است.", "d4": "دستورهای <code>termux-*</code> (API اندروید) وجود ندارند؛ فقط کلیپ‌بورد (<code>/dev/clipboard</code>) و موقعیت مکانی (<code>/dev/location</code>) معادل دارند.", "d5": "دسترسی به فایل‌های آیفون با <code>mount -t ios . /mnt/files</code> و انتخاب پوشه در پنجره iOS انجام می‌شود."}, "en": {"title": "Termux to iSH Command Converter", "sub": "Paste a Termux command to get a version compatible with iSH on iPhone (Alpine Linux with <code>apk</code>).", "lin": "Termux command", "lout": "iSH command", "pre": "Prepend a prerequisites install (curl, bash and tools the command needs) — for a fresh iSH", "brk": "Add <code>--break-system-packages</code> to <code>pip install</code> (Alpine blocks system-wide pip installs by default)", "copy": "Copy command", "copied": "Copied", "ex": "Example", "clr": "Clear", "lang": "فارسی", "sum": "Key differences between iSH and Termux", "d1": "iSH emulates a <b>32-bit x86</b> CPU; <code>arm64</code> and <code>amd64</code> binaries will not run, you need the <code>386</code>/<code>i386</code>/<code>i686</code> build.", "d2": "The OS inside iSH is Alpine Linux: package manager <code>apk</code> (not <code>pkg</code> or <code>apt</code>), default shell <code>ash</code> (not bash) and default user root (no <code>sudo</code> needed).", "d3": "Termux paths (<code>/data/data/com.termux/…</code>) do not exist: <code>$PREFIX</code> is <code>/usr</code> and <code>$HOME</code> is <code>/root</code>.", "d4": "<code>termux-*</code> commands (Android API) do not exist; only the clipboard (<code>/dev/clipboard</code>) and location (<code>/dev/location</code>) have equivalents.", "d5": "iPhone files are accessed with <code>mount -t ios . /mnt/files</code> and a folder picked in the iOS dialog."}};
+let LANG='fa';try{const s=localStorage.getItem('ish-conv-lang');if(s==='en'||s==='fa')LANG=s}catch(e){}
+
+const EXAMPLES=[
+'bash <(curl -fsSL https://raw.githubusercontent.com/Ptechgithub/warp/main/endip/install.sh)',
+'pkg update && pkg upgrade -y && pkg install -y python git openssh nodejs-lts',
+'termux-setup-storage && cp ~/storage/shared/Download/a.txt ~/ && echo "ok" | termux-clipboard-set',
+'sudo apt install -y build-essential libffi\npip install requests\ncurl -L https://example.com/tool-linux-arm64 -o tool && chmod +x tool'
+];
+let exI=0;
+
+/* نگاشت نام بسته ترموکس -> آلپاین (۳٫۱۹). بسته‌های ناشناخته با همان نام می‌مانند. */
+const PKG={
+'python':['python3'],'python3':['python3'],'python-pip':['py3-pip'],'pip':['py3-pip'],
+'nodejs':['nodejs','npm'],'nodejs-lts':['nodejs','npm'],'npm':['npm'],
+'golang':['go'],'rust':['rust','cargo'],'build-essential':['build-base'],
+'openssh':['openssh'],'openssh-client':['openssh-client'],'openssh-server':['openssh-server'],
+'openssl-tool':['openssl'],'openssl':['openssl'],'libffi':['libffi-dev'],'libxml2':['libxml2-dev'],
+'libxslt':['libxslt-dev'],'libjpeg-turbo':['libjpeg-turbo-dev'],'libpng':['libpng-dev'],'zlib':['zlib-dev'],
+'libcurl':['curl-dev'],'libsqlite':['sqlite-dev'],'pkg-config':['pkgconf'],
+'dnsutils':['bind-tools'],'netcat':['netcat-openbsd'],'netcat-openbsd':['netcat-openbsd'],
+'ncurses-utils':['ncurses'],'python-numpy':['py3-numpy'],'python-cryptography':['py3-cryptography'],
+'clang':['clang'],'make':['make'],'cmake':['cmake'],'git':['git'],'curl':['curl'],'wget':['wget'],
+'vim':['vim'],'nano':['nano'],'tmux':['tmux'],'htop':['htop'],'zip':['zip'],'unzip':['unzip'],'jq':['jq'],
+'ffmpeg':['ffmpeg'],'ruby':['ruby'],'perl':['perl'],'bash':['bash'],'zsh':['zsh'],'fish':['fish'],
+'neofetch':['neofetch'],'figlet':['figlet'],'imagemagick':['imagemagick'],'sqlite':['sqlite'],
+'nmap':['nmap'],'socat':['socat'],'rsync':['rsync'],'tree':['tree'],'ripgrep':['ripgrep'],'fzf':['fzf'],
+'gnupg':['gnupg'],'binutils':['binutils'],'autoconf':['autoconf'],'automake':['automake'],'libtool':['libtool'],
+'iproute2':['iproute2'],'net-tools':['net-tools'],'lsof':['lsof'],'strace':['strace'],'gawk':['gawk'],
+'coreutils':['coreutils'],'findutils':['findutils'],'tar':['tar'],'file':['file'],'which':['which'],
+'yarn':['yarn'],'redis':['redis'],'nginx':['nginx'],'proxychains-ng':['proxychains-ng'],'tor':['tor']
+};
+/* بسته‌هایی که فقط مخصوص ترموکس هستند و در iSH معنی ندارند */
+const DROP=new Set(['termux-api','termux-tools','termux-services','termux-exec','termux-keyring','termux-auth',
+'root-repo','x11-repo','unstable-repo','science-repo','game-repo','tur-repo','proot','proot-distro','tsu','termux-am']);
+
+function splitOps(s){
+  const parts=[];let cur='',q='',d=0;
+  for(let i=0;i<s.length;i++){
+    const c=s[i];
+    if(c==='\\'&&q!=="'"){cur+=c+(s[i+1]||'');i++;continue}
+    if(q){cur+=c;if(c===q)q='';continue}
+    if(c==='#'&&d===0&&(i===0||/\s/.test(s[i-1]))){cur+=s.slice(i);break}
+    if(c==="'"||c==='"'){q=c;cur+=c;continue}
+    if(c==='('){d++;cur+=c;continue}
+    if(c===')'){d=Math.max(0,d-1);cur+=c;continue}
+    if(d===0){
+      const two=s.substr(i,2);
+      if(two==='&&'||two==='||'){parts.push({t:cur,op:two});cur='';i++;continue}
+      if(c===';'){parts.push({t:cur,op:';'});cur='';continue}
+    }
+    cur+=c;
+  }
+  parts.push({t:cur,op:''});
+  return parts;
+}
+function shq(u){return /[&?;|<>()$`'"\s*]/.test(u)?"'"+u.replace(/'/g,"'\\''")+"'":u}
+
+function convPkg(core,ctx){
+  const m=core.match(/^(pkg|apt|apt-get|aptitude)\s+(.*)$/);
+  if(!m)return undefined;
+  const toks=m[2].trim().split(/\s+/).filter(Boolean);
+  const ai=toks.findIndex(t=>!t.startsWith('-'));
+  if(ai<0){ctx.w('k0',core);return core}
+  const act=toks[ai].toLowerCase();
+  const rest=toks.filter((t,i)=>i!==ai);
+  const flags=rest.filter(t=>t.startsWith('-')),args=rest.filter(t=>!t.startsWith('-'));
+  ctx.i('k1');
+  switch(act){
+    case 'update':case 'up':return 'apk update';
+    case 'upgrade':case 'full-upgrade':case 'dist-upgrade':
+      ctx.w('k2');
+      return 'apk upgrade';
+    case 'autoremove':case 'autoclean':ctx.i('k3');return null;
+    case 'clean':return 'apk cache clean';
+    case 'search':case 'find':return 'apk search'+(args.length?' '+args.join(' '):'');
+    case 'list':case 'list-installed':
+      return (act==='list-installed'||flags.some(f=>/installed/.test(f)))?'apk info':'apk list';
+    case 'show':case 'info':return 'apk info -a'+(args.length?' '+args.join(' '):'');
+    case 'files':return 'apk info -L'+(args.length?' '+args.join(' '):'');
+    case 'edit-sources':case 'change-repo':
+      ctx.w('k4');return core;
+    case 'install':case 'add':case 'i':case 'reinstall':case 'remove':case 'uninstall':case 'purge':case 'rm':case 'del':{
+      const out=[];
+      for(const a of args){
+        const k=a.toLowerCase();
+        if(DROP.has(k)){ctx.w('k5',a);continue}
+        if(PKG[k])PKG[k].forEach(x=>{if(!out.includes(x))out.push(x)});
+        else{if(!out.includes(a))out.push(a);if(/^(install|add|i|reinstall)$/.test(act))ctx.unk.add(a)}
+      }
+      if(!out.length)return null;
+      if(/^(remove|uninstall|purge|rm|del)$/.test(act))return 'apk del '+out.join(' ');
+      out.forEach(x=>ctx.inst.add(x));
+      return act==='reinstall'?'apk fix --reinstall '+out.join(' '):'apk add '+out.join(' ');
+    }
+    default:
+      ctx.w('k6',act,core);return core;
+  }
+}
+
+function convTermux(core,ctx){
+  const m=core.match(/^termux-([\w-]+)\s*(.*)$/);
+  if(!m)return undefined;
+  const n=m[1],a=m[2].trim();
+  switch(n){
+    case 'setup-storage':
+      ctx.i('k7');
+      return 'mkdir -p /mnt/files && mount -t ios . /mnt/files';
+    case 'clipboard-get':ctx.i('k8');return 'cat /dev/clipboard';
+    case 'clipboard-set':
+      ctx.i('k9');
+      return a?'printf %s '+a+' > /dev/clipboard':core;
+    case 'location':
+      ctx.w('k10');
+      return 'cat /dev/location';
+    case 'wake-lock':
+      ctx.w('k11');
+      return 'cat /dev/location > /dev/null &';
+    case 'wake-unlock':return "pkill -f 'cat /dev/location'";
+    case 'info':return 'cat /proc/ish/version';
+    case 'fix-shebang':ctx.i('k12');return null;
+    case 'reload-settings':ctx.i('k13');return null;
+    case 'change-repo':
+      ctx.w('k14');return core;
+    case 'chroot':
+      ctx.w('k15');return core;
+    default:
+      ctx.w('k16',n);return core;
+  }
+}
+
+function convFetch(core,ctx){
+  const m=core.match(/^(bash|sh|zsh|source|\.)\s+(?:-c\s+)?(?:<\(|"?\$\()\s*(curl|wget)\s+(.+?)\s*\)"?\s*(.*)$/);
+  if(!m)return undefined;
+  const u=m[3].match(/https?:\/\/[^\s"')]+/);
+  if(!u){ctx.w('k17',core);return core}
+  const f=u[0].split('?')[0].split('/').pop().replace(/[^\w.\-]/g,'')||'install.sh';
+  const hdr=(m[3].match(/(?:-H|--header|-A|--user-agent)\s+(?:'[^']*'|"[^"]*"|\S+)/g)||[]).join(' ');
+  const rest=m[4]?' '+m[4]:'';
+  const dl='curl -fsSL'+(hdr?' '+hdr:'')+' '+shq(u[0])+' -o '+f;
+  const it=m[1];
+  ctx.i('k18',it,f);
+  if(it==='source'||it==='.')return dl+' && . ./'+f+rest;
+  if(it==='zsh')ctx.w('k19');
+  return dl+(it==='bash'?' && chmod +x '+f:'')+' && '+it+' '+f+rest;
+}
+
+function convSeg(core,ctx){
+  let c=core;
+  const before=c;
+  c=c.replace(/(^|\|\s*)(?:sudo|tsudo)(?:\s+-\S+)*\s+/g,'$1');
+  if(c!==before)ctx.i('k20');
+  if(/\|\s*termux-clipboard-set\s*$/.test(c)){
+    c=c.replace(/\|\s*termux-clipboard-set\s*$/,'> /dev/clipboard');
+    ctx.i('k21');
+  }
+  c=c.replace(/\$\(\s*termux-clipboard-get\s*\)|`\s*termux-clipboard-get\s*`/g,'$(cat /dev/clipboard)');
+  let r;
+  if((r=convFetch(c,ctx))!==undefined)c=r;
+  else if((r=convPkg(c,ctx))!==undefined)c=r;
+  else if((r=convTermux(c,ctx))!==undefined)c=r;
+  else{
+    if(/^(pip3?|python3?\s+-m\s+pip)\s+install\b/.test(c)){
+      ctx.w('k22');
+      if(ctx.brk&&!/--break-system-packages/.test(c))c=c.replace(/\binstall\b/,'install --break-system-packages');
+    }
+    if(/^(proot-distro|proot|tsu|sv-enable|sv-disable|sv|am|pm|getprop|dumpsys|logcat|svc|settings|screencap|input|cmd)(\s|$)/.test(c))
+      ctx.w('k23',c.split(/\s+/)[0]);
+  }
+  return c;
+}
+
+function convertAll(text,o){
+  o=o||{};
+  const warns=[],infos=[];
+  const ctx={inst:new Set(),unk:new Set(),brk:!!o.brk,
+    w:(k,...a)=>{if(!warns.some(x=>x[0]===k&&x[1].join()===a.join()))warns.push([k,a])},i:(k,...a)=>{if(!infos.some(x=>x[0]===k&&x[1].join()===a.join()))infos.push([k,a])}};
+  /* مسیرها و متغیرهای ترموکس */
+  const P='/data/data/com.termux/files';
+  let s=text.replace(/\r\n?/g,'\n');
+  const s0=s;
+  s=s.split(P+'/usr').join('/usr').split(P+'/home').join('/root').split(P).join('/root')
+     .replace(/\$\{?PREFIX\}?/g,'/usr').replace(/\$\{?TMPDIR\}?/g,'/tmp');
+  if(s!==s0)ctx.i('k24');
+  const s1=s;
+  s=s.replace(/(?:~|\$HOME|\$\{HOME\}|\/root)\/storage\/(?:shared|downloads|dcim|documents|pictures|music|movies)/g,'/mnt/files')
+     .replace(/\/storage\/emulated\/0|\/sdcard/g,'/mnt/files');
+  if(s!==s1)ctx.w('k25');
+  if(/(aarch64|arm64|armv[78]|android-arm|amd64|x86[_-]64|linux-?64)/i.test(s))
+    ctx.w('k26');
+  /* پردازش خط‌به‌خط (با پشتیبانی از \ پایان خط و heredoc) */
+  const src=s.split('\n'),outL=[];let here=null,buf='';
+  for(let ln of src){
+    if(here!==null){outL.push(ln);if(ln.trim()===here)here=null;continue}
+    if(/\\\s*$/.test(ln)&&ln.trim()){buf+=ln.replace(/\\\s*$/,' ');continue}
+    if(buf){ln=buf+ln.trim();buf=''}
+    if(!ln.trim()||/^\s*#/.test(ln)){outL.push(ln);continue}
+    const hm=ln.match(/<<-?\s*['"]?(\w+)['"]?/);
+    const lead=ln.match(/^\s*/)[0];
+    const segs=splitOps(ln.slice(lead.length));
+    const res=[];
+    segs.forEach(sg=>{
+      const m=sg.t.match(/^(\s*)([\s\S]*?)(\s*)$/);
+      const core=m[2];
+      if(!core){res.push({t:sg.t,op:sg.op,keep:true});return}
+      const n=convSeg(core,ctx);
+      res.push({t:n===null?null:m[1]+n+m[3],op:sg.op});
+    });
+    /* حذف بخش‌های null به‌همراه عملگر کناری */
+    let outS='';
+    const live=res.filter(x=>x.t!==null);
+    live.forEach((x,i)=>{
+      outS+=x.t;
+      if(i<live.length-1){
+        const idx=res.indexOf(x);
+        outS+=res[idx].op===''?'':res[idx].op==='&&'||res[idx].op==='||'||res[idx].op===';'?
+          (res[idx].op===';'?';':' '+res[idx].op.trim()):'';
+      }
+    });
+    outS=outS.replace(/\s+(&&|\|\|)\s*/g,' $1 ').replace(/\s+;/g,';');
+    if(live.length)outL.push(lead+outS.trim());
+    if(hm)here=hm[1];
+  }
+  let out=outL.join('\n').trim();
+  const uses=n=>new RegExp('(^|[\\n;&|(]\\s*)'+n+'(\\s|$)').test(out);
+  if(ctx.unk.size)ctx.w('k27',[...ctx.unk].map(x=>'`'+x+'`').join(', '));
+  if(out&&o.pre){
+    const need=['curl','bash'];
+    const add=(p)=>{if(!need.includes(p)&&!ctx.inst.has(p))need.push(p)};
+    if(uses('git'))add('git');if(uses('jq'))add('jq');
+    if(uses('python3?')||uses('pip3?')){add('python3');}
+    if(uses('pip3?'))add('py3-pip');
+    if(uses('npm')||uses('node')){add('nodejs');add('npm')}
+    if(uses('openssl'))add('openssl');
+    if(uses('ssh')||uses('scp')||uses('ssh-keygen'))add('openssh-client');
+    if(uses('unzip'))add('unzip');if(uses('zip'))add('zip');
+    out='apk update && apk add '+need.join(' ')+'\n'+out;
+  }else if(out&&(uses('bash')||uses('curl'))&&!ctx.inst.has('curl')&&!ctx.inst.has('bash')){
+    ctx.w('k28');
+  }
+  return {out,warns,infos};
+}
+
+const esc=t=>t.replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c])).replace(/`([^`]+)`/g,'<code dir="ltr">$1</code>');
+const fmt=([k,a])=>MSG[LANG][k].replace(/\{(\d+)\}/g,(m,n)=>a[+n]);
+let last={warns:[],infos:[]};
+function paint(){
+  $('warns').innerHTML=last.warns.map(x=>'<li class="w">⚠ '+esc(fmt(x))+'</li>').join('');
+  $('notes').innerHTML=last.infos.map(x=>'<li>'+esc(fmt(x))+'</li>').join('');
+}
+function run(){
+  const r=convertAll($('in').value,{pre:$('pre').checked,brk:$('brk').checked});
+  $('out').textContent=r.out;last=r;paint();
+}
+function setLang(l){
+  LANG=l;try{localStorage.setItem('ish-conv-lang',l)}catch(e){}
+  const d=document.documentElement;d.lang=l;d.dir=l==='fa'?'rtl':'ltr';
+  document.title=UI[l].title;
+  document.querySelectorAll('[data-i]').forEach(e=>{e.innerHTML=UI[l][e.dataset.i]});
+  $('copy').textContent=UI[l].copy;
+  paint();
+}
+$('in').addEventListener('input',run);$('pre').addEventListener('change',run);$('brk').addEventListener('change',run);
+$('ex').onclick=()=>{$('in').value=EXAMPLES[exI++%EXAMPLES.length];run()};
+$('clr').onclick=()=>{$('in').value='';run()};
+$('lang').onclick=()=>setLang(LANG==='fa'?'en':'fa');
+$('copy').onclick=async()=>{
+  const t=$('out').textContent;if(!t)return;
+  try{await navigator.clipboard.writeText(t)}catch(e){const r=document.createRange();r.selectNodeContents($('out'));const s=getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy')}
+  $('copy').textContent=UI[LANG].copied;setTimeout(()=>$('copy').textContent=UI[LANG].copy,1500);
+};
+setLang(LANG);run();
+</script>
+</body>
+</html>

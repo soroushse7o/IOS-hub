@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<!--
+  Developer: github.com/soroushse7o
+-->
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="github.com/soroushse7o" />
+  <title>سازنده پروفایل Cloudflare Gateway / DNS برای iOS</title>
+  <style>
+    :root {
+      --bg: #f5f5f7;
+      --card-bg: #ffffff;
+      --primary: #0071e3;
+      --primary-hover: #0077ed;
+      --text: #1d1d1f;
+      --subtext: #86868b;
+      --border: #d2d2d7;
+      --error: #ff3b30;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Tahoma, Roboto, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      max-width: 520px;
+      margin: 32px auto;
+      padding: 0 16px;
+      direction: rtl;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .container {
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      text-align: center;
+    }
+
+    p.sub {
+      color: var(--subtext);
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: center;
+      margin: 0 0 20px 0;
+    }
+
+    fieldset {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+    }
+
+    legend {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 0 6px;
+      color: var(--text);
+    }
+
+    input[type="text"] {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      margin-top: 4px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      direction: ltr;
+      text-align: left;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input[type="text"]:focus {
+      border-color: var(--primary);
+    }
+
+    .radio-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .radio-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .radio-row input {
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .helper {
+      font-size: 11px;
+      color: var(--subtext);
+      margin-top: 4px;
+      direction: rtl;
+      text-align: right;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+    }
+
+    .error {
+      color: var(--error);
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .footer {
+      margin-top: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--subtext);
+      direction: ltr;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>سازنده پروفایل DNS امن iOS</h1>
+  <p class="sub">آدرس‌های DoH و DoT خود را وارد کنید تا پروفایل اختصاصی <code>.mobileconfig</code> با قوانین On-Demand ساخته شود.</p>
+
+  <form id="dnsForm">
+    <fieldset>
+      <legend>عنوان سرویس (Service Display Name)</legend>
+      <input type="text" id="serviceName" placeholder="Cloudflare Gateway" value="Cloudflare Gateway" />
+    </fieldset>
+
+    <fieldset>
+      <legend>نوع پروتکل خروجی</legend>
+      <div class="radio-group">
+        <label class="radio-row">
+          <input type="radio" name="mode" value="BOTH" checked />
+          هر دو پروتکل DoH و DoT (مانند ساختار Cloudflare)
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="mode" value="DOH_ONLY" />
+          فقط DNS-over-HTTPS (DoH)
+        </label>
+        <label class="radio-row">
+          <input type="radio" name="mode" value="DOT_ONLY" />
+          فقط DNS-over-TLS (DoT)
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset id="dohGroup">
+      <legend>آدرس سرور DoH (Server URL)</legend>
+      <input type="text" id="dohUrl" placeholder="https://xxxxxx.cloudflare-gateway.com/dns-query" />
+      <div class="helper">آدرس کامل HTTPS برای کوئری DoH</div>
+      <div class="error" id="dohError">لطفاً آدرس معتبر DoH (شروع با https://) را وارد کنید.</div>
+    </fieldset>
+
+    <fieldset id="dotGroup">
+      <legend>نام هاست سرور DoT (Server Name / Hostname)</legend>
+      <input type="text" id="dotHost" placeholder="xxxxxx.cloudflare-gateway.com" />
+      <div class="helper">دامنه سرور TLS بدون پسوند و پیشوند</div>
+      <div class="error" id="dotError">لطفاً نام هاست DoT را وارد کنید.</div>
+    </fieldset>
+
+    <button type="submit">دانلود و ساخت پروفایل</button>
+  </form>
+
+  <div class="footer">
+    Developer: <a href="https://github.com/soroushse7o" target="_blank" rel="noopener noreferrer">github.com/soroushse7o</a>
+  </div>
+</div>
+
+<script>
+/**
+ * iOS Secure DNS (DoH/DoT) Profile Generator
+ * Developed by: https://github.com/soroushse7o
+ */
+
+function esc(s) {
+  return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function uuidv4() {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
+    var r = Math.random() * 16 | 0, v = c === "x" ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+var dohGroup = document.getElementById("dohGroup");
+var dotGroup = document.getElementById("dotGroup");
+var modeRadios = document.querySelectorAll('input[name="mode"]');
+
+modeRadios.forEach(function(radio) {
+  radio.addEventListener("change", function() {
+    if (this.value === "BOTH") {
+      dohGroup.style.display = "block";
+      dotGroup.style.display = "block";
+    } else if (this.value === "DOH_ONLY") {
+      dohGroup.style.display = "block";
+      dotGroup.style.display = "none";
+    } else if (this.value === "DOT_ONLY") {
+      dohGroup.style.display = "none";
+      dotGroup.style.display = "block";
+    }
+  });
+});
+
+document.getElementById("dnsForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  var serviceName = document.getElementById("serviceName").value.trim() || "Cloudflare Gateway";
+  var mode = document.querySelector('input[name="mode"]:checked').value;
+  var dohUrl = document.getElementById("dohUrl").value.trim();
+  var dotHost = document.getElementById("dotHost").value.trim();
+
+  var dohError = document.getElementById("dohError");
+  var dotError = document.getElementById("dotError");
+  dohError.style.display = "none";
+  dotError.style.display = "none";
+
+  var hasError = false;
+  if ((mode === "BOTH" || mode === "DOH_ONLY") && (!dohUrl || !dohUrl.startsWith("https://"))) {
+    dohError.style.display = "block";
+    hasError = true;
+  }
+  if ((mode === "BOTH" || mode === "DOT_ONLY") && !dotHost) {
+    dotError.style.display = "block";
+    hasError = true;
+  }
+  if (hasError) return;
+
+  var onDemandRules =
+"<key>OnDemandRules</key>\n<array>\n" +
+"<dict>\n<key>Action</key>\n<string>Connect</string>\n<key>InterfaceTypeMatch</key>\n<string>WiFi</string>\n</dict>\n" +
+"<dict>\n<key>Action</key>\n<string>Connect</string>\n<key>InterfaceTypeMatch</key>\n<string>Cellular</string>\n</dict>\n" +
+"<dict>\n<key>Action</key>\n<string>Disconnect</string>\n</dict>\n" +
+"</array>\n";
+
+  var innerPayloads = [];
+
+  if (mode === "BOTH" || mode === "DOH_ONLY") {
+    var dohPayloadUUID = uuidv4();
+    var dohPayloadId = uuidv4();
+    var dohDict =
+"<dict>\n" +
+"<key>DNSSettings</key>\n" +
+"<dict>\n" +
+"<key>DNSProtocol</key>\n<string>HTTPS</string>\n" +
+"<key>ServerURL</key>\n<string>" + esc(dohUrl) + "</string>\n" +
+"</dict>\n" +
+onDemandRules +
+"<key>PayloadDescription</key>\n<string>Configures device to use " + esc(serviceName) + " Encrypted DNS over HTTPS</string>\n" +
+"<key>PayloadDisplayName</key>\n<string>" + esc(serviceName) + " DNS over HTTPS</string>\n" +
+"<key>PayloadIdentifier</key>\n<string>com.apple.dnsSettings.managed." + dohPayloadId + "</string>\n" +
+"<key>PayloadOrganization</key>\n<string>github.com/soroushse7o</string>\n" +
+"<key>PayloadType</key>\n<string>com.apple.dnsSettings.managed</string>\n" +
+"<key>PayloadUUID</key>\n<string>" + dohPayloadUUID + "</string>\n" +
+"<key>PayloadVersion</key>\n<integer>1</integer>\n" +
+"<key>ProhibitDisablement</key>\n<false/>\n" +
+"</dict>";
+    innerPayloads.push(dohDict);
+  }
+
+  if (mode === "BOTH" || mode === "DOT_ONLY") {
+    var dotPayloadUUID = uuidv4();
+    var dotPayloadId = uuidv4();
+    var dotDict =
+"<dict>\n" +
+"<key>DNSSettings</key>\n" +
+"<dict>\n" +
+"<key>DNSProtocol</key>\n<string>TLS</string>\n" +
+"<key>ServerName</key>\n<string>" + esc(dotHost) + "</string>\n" +
+"</dict>\n" +
+onDemandRules +
+"<key>PayloadDescription</key>\n<string>Configures device to use " + esc(serviceName) + " Encrypted DNS over TLS</string>\n" +
+"<key>PayloadDisplayName</key>\n<string>" + esc(serviceName) + " DNS over TLS</string>\n" +
+"<key>PayloadIdentifier</key>\n<string>com.apple.dnsSettings.managed." + dotPayloadId + "</string>\n" +
+"<key>PayloadOrganization</key>\n<string>github.com/soroushse7o</string>\n" +
+"<key>PayloadType</key>\n<string>com.apple.dnsSettings.managed</string>\n" +
+"<key>PayloadUUID</key>\n<string>" + dotPayloadUUID + "</string>\n" +
+"<key>PayloadVersion</key>\n<integer>1</integer>\n" +
+"<key>ProhibitDisablement</key>\n<false/>\n" +
+"</dict>";
+    innerPayloads.push(dotDict);
+  }
+
+  var rootUUID = uuidv4();
+  var plist =
+'<?xml version="1.0" encoding="UTF-8"?>\n' +
+'<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">\n' +
+'<plist version="1.0">\n<dict>\n' +
+"<key>PayloadContent</key>\n<array>\n" + innerPayloads.join("\n") + "\n</array>\n" +
+"<key>PayloadDescription</key>\n<string>Adds " + esc(serviceName) + " Secure DNS (DoH/DoT) configurations to macOS X and iOS based systems</string>\n" +
+"<key>PayloadDisplayName</key>\n<string>" + esc(serviceName) + " Secure DNS</string>\n" +
+"<key>PayloadIdentifier</key>\n<string>com.cloudflare-gateway.apple-dns." + rootUUID + "</string>\n" +
+"<key>PayloadOrganization</key>\n<string>github.com/soroushse7o</string>\n" +
+"<key>PayloadRemovalDisallowed</key>\n<false/>\n" +
+"<key>PayloadType</key>\n<string>Configuration</string>\n" +
+"<key>PayloadUUID</key>\n<string>" + rootUUID + "</string>\n" +
+"<key>PayloadVersion</key>\n<integer>1</integer>\n" +
+"</dict>\n</plist>";
+
+  var blob = new Blob([plist], { type: "application/x-apple-aspen-config" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = (serviceName.replace(/[^a-z0-9]/gi, "_") || "secure_dns") + ".mobileconfig";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(function() { URL.revokeObjectURL(url); }, 2000);
+});
+</script>
+</body>
+</html>
