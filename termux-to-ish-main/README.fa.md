@@ -1,4 +1,4 @@
-<a href="https://soroushse7o.github.io/termux-to-ish/">
+<a href="https://command-convert-ish.vercel.app/">
   <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&height=150&section=header&text=termux-to-ish&fontSize=30&animation=fadeIn" width="100%">
 </a>
 
@@ -6,7 +6,7 @@
 
 **فارسی** · [English](README.en.md)
 
-<a href="https://soroushse7o.github.io/termux-to-ish/">
+<a href="https://command-convert-ish.vercel.app/">
   <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&weight=600&size=22&pause=1000&color=22C55E&center=true&vCenter=true&width=780&lines=Convert+Termux+commands;to+iSH+seamlessly" alt="Typing SVG">
 </a>
 یک صفحه HTML تک‌فایلی و فارسی (راست‌به‌چپ) که دستورهای مخصوص **ترموکس** (Termux در اندروید) را به دستورهای سازگار با **iSH** (پوسته لینوکس روی آیفون) تبدیل می‌کند. همه‌چیز در مرورگر و بدون سرور اجرا می‌شود؛ هیچ داده‌ای ارسال نمی‌شود.
