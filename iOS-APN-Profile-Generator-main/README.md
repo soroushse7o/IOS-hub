@@ -1,6 +1,6 @@
  # 📱 iOS APN Profile Generator | سازنده پروفایل APN برای آیفون
 
-[![Live Demo](https://img.shields.io/badge/Launch-iOS_APN_Generator-0A84FF?style=for-the-badge&logo=apple&logoColor=white)](https://soroushse7o.github.io/iOS-APN-Profile-Generator/)
+[![Live Demo](https://img.shields.io/badge/Launch-iOS_APN_Generator-0A84FF?style=for-the-badge&logo=apple&logoColor=white)](https://ios-apn-profile-generator.vercel.app/)
 
 [English](#english) | [فارسی](#فارسی)
 
@@ -30,7 +30,7 @@
 4. وارد تنظیمات گوشی (**Settings**) شوید.
 5. در بالای صفحه گزینه **Profile Downloaded** را انتخاب کرده و روی **Install** بزنید.
    
-> ### 🌐 [ورود به ابزار آنلاین iOS APN Profile Generator](https://soroushse7o.github.io/iOS-APN-Profile-Generator/)
+> ### 🌐 [ورود به ابزار آنلاین iOS APN Profile Generator](https://ios-apn-profile-generator.vercel.app/)
 > برای ساخت آسان و مستقیم پروفایل‌های تنظیمات APN در iOS روی لینک بالا کلیک کنید.
 
 ## 📊 مراحل تست و نتایج اتصال | Test & Results
@@ -71,7 +71,7 @@ A lightweight, secure, fully client-side web utility to generate Apple iOS/iPadO
 * **Modern & Legacy Payload Support:** Supports modern `com.apple.cellular` (iOS 7+) as well as legacy `com.apple.apn.managed`.
 * **Customizable:** Configure APN name, username, password, authentication type (CHAP/PAP), proxy, and IP protocols (IPv4 / IPv6).
 
-### 📲 How to Install Profile on iOS
+### 📲 How to Install Profile on iOS [![Live Demo](https://img.shields.io/badge/Launch-iOS_APN_Generator-0A84FF?style=for-the-badge&logo=apple&logoColor=white)](https://ios-apn-profile-generator.vercel.app/)
 
 1. Open the hosted webpage using **Safari** on your iPhone/iPad.
 2. Fill in the APN details and tap **دانلود و ساخت پروفایل / Generate Profile**.
