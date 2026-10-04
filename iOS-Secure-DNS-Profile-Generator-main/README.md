@@ -1,6 +1,6 @@
 # 🛡️ iOS Secure DNS (DoH / DoT) Profile Generator
 
-[![Live Demo](https://img.shields.io/badge/Launch-iOS_DNS_Generator-34C759?style=for-the-badge&logo=apple&logoColor=white)](https://soroushse7o.github.io/iOS-Secure-DNS-Profile-Generator/)
+[![Live Demo](https://img.shields.io/badge/Launch-iOS_DNS_Generator-34C759?style=for-the-badge&logo=apple&logoColor=white)](https://ios-dns-profile-generator.vercel.app/)
 
 
 [English](#english) | [فارسی](#فارسی)
@@ -29,7 +29,7 @@
 4. وارد تنظیمات دستگاه (**Settings**) شوید.
 5. از بالای صفحه گزینه **Profile Downloaded** را انتخاب کرده و روی **Install** بزنید.
 
-> ### 🛡️ [ورود به ابزار آنلاین iOS Secure DNS Profile Generator](https://soroushse7o.github.io/iOS-Secure-DNS-Profile-Generator/)
+> ### 🛡️ [ورود به ابزار آنلاین iOS Secure DNS Profile Generator](https://ios-dns-profile-generator.vercel.app/)
 > برای ساخت و دریافت مستقیم پروفایل‌های امن DoH / DoT روی iOS، روی لینک بالا کلیک کنید.
 
 
